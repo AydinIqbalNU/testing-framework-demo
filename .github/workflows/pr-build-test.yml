@@ -46,6 +46,40 @@ jobs:
           lcov --rc geninfo_unexecuted_blocks=1 --ignore-errors mismatch --remove coverage.info '/usr/*' '*/tests/*' '*/_deps/*' --output-file coverage.info
           genhtml coverage.info --output-directory coverage
 
+      - name: Install matplotlib
+        run: pip install matplotlib
+
+      - name: Generate coverage chart
+        run: |
+          python3 << 'EOF'
+          import matplotlib.pyplot as plt
+          import re
+
+          # Parse coverage.info to extract covered + total lines
+          covered = 0
+          total = 0
+          with open("coverage.info") as f:
+              for line in f:
+                  if line.startswith("LF:"):
+                      total += int(line.split(":")[1])
+                  if line.startswith("LH:"):
+                      covered += int(line.split(":")[1])
+
+          labels = ['Covered', 'Not Covered']
+          sizes = [covered, total - covered]
+          colors = ['#4CAF50', '#F44336']
+
+          plt.figure(figsize=(4,4))
+          plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%')
+          plt.title('Code Coverage')
+          plt.savefig('coverage-chart.png')
+          EOF
+
+      - name: Add coverage chart to summary
+        run: |
+          echo "## 📊 Coverage Chart" >> $GITHUB_STEP_SUMMARY
+          echo "![](coverage-chart.png)" >> $GITHUB_STEP_SUMMARY
+
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
