@@ -53,9 +53,7 @@ jobs:
         run: |
           python3 << 'EOF'
           import matplotlib.pyplot as plt
-          import re
 
-          # Parse coverage.info to extract covered + total lines
           covered = 0
           total = 0
           with open("coverage.info") as f:
@@ -75,10 +73,16 @@ jobs:
           plt.savefig('coverage-chart.png')
           EOF
 
+      - name: Upload coverage chart
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-chart
+          path: coverage-chart.png
+
       - name: Add coverage chart to summary
         run: |
           echo "## 📊 Coverage Chart" >> $GITHUB_STEP_SUMMARY
-          echo "![](coverage-chart.png)" >> $GITHUB_STEP_SUMMARY
+          echo "![]($GITHUB_WORKSPACE/coverage-chart.png)" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
