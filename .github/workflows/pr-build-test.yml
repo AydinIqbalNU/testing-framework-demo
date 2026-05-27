@@ -42,8 +42,8 @@ jobs:
 
       - name: Generate coverage report
         run: |
-          lcov --capture --directory build --output-file coverage.info
-          lcov --remove coverage.info '/usr/*' '*/tests/*' --output-file coverage.info
+          lcov --rc geninfo_unexecuted_blocks=1 --capture --directory build --output-file coverage.info
+          lcov --rc geninfo_unexecuted_blocks=1 --remove coverage.info '/usr/*' --output-file coverage.info
           genhtml coverage.info --output-directory coverage
 
       - name: Upload coverage report
