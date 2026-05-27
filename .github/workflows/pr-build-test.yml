@@ -29,6 +29,10 @@ jobs:
       - name: Create results directory
         run: mkdir -p ${{ github.workspace }}/results
 
+      - name: Debug results folder
+        run: ls -R ${{ github.workspace }}/results || echo "No results directory"
+        if: always()
+
       - name: Test
         run: dotnet test "${{github.workspace}}/src/my-web-app.sln" --no-restore --logger:"junit;LogFilePath=${{ github.workspace }}/results/test-results.xml"
 
