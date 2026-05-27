@@ -26,6 +26,9 @@ jobs:
       - name: Build
         run: dotnet build "${{github.workspace}}/src/my-web-app.sln"  --no-restore --configuration Release
 
+      - name: Create results directory
+        run: mkdir -p ${{ github.workspace }}/results
+
       - name: Test
         run: dotnet test "${{github.workspace}}/src/my-web-app.sln" --no-restore --logger:"junit;LogFilePath=${{ github.workspace }}/results/test-results.xml"
 
