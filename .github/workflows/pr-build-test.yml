@@ -79,10 +79,15 @@ jobs:
           name: coverage-chart
           path: coverage-chart.png
 
-      - name: Add coverage chart to summary
+      - name: Embed chart in summary
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          ARTIFACT_URL=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts \
+            --jq '.artifacts[] | select(.name=="coverage-chart") | .archive_download_url')
+      
           echo "## 📊 Coverage Chart" >> $GITHUB_STEP_SUMMARY
-          echo "![](file://$GITHUB_WORKSPACE/coverage-chart.png)" >> $GITHUB_STEP_SUMMARY
+          echo "![]($ARTIFACT_URL)" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
