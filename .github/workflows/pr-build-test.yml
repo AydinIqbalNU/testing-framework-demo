@@ -1,36 +1,48 @@
 name: PR - Build / Test
 
+# triggers the workflow to run on pull request or manually.
+# DESIGN CHOICES: could add daily auto trigger, 
+# trigger on github release, trigger on issue open, etc.
 on:
   pull_request:
     branches:
       - main
   workflow_dispatch:
 
+# do not give actions write permissions
 permissions:
   actions: read
   contents: read
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # run job on ubuntu linux compiler
 
     steps:
 
+      # pulls repo to be built by workflow
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # install compilers, build system, coverage tool, and python
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y build-essential cmake lcov python3
 
+      # configure project into a build directory, 
+      # set to debug mode, and set coverage flags
       - name: Configure CMake (with coverage)
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage"
 
+      # compile library and tests
       - name: Build
         run: cmake --build build --config Debug
 
+      # runs all tests registered by add_test()
       - name: Run tests
         run: ctest --test-dir build --output-on-failure
 
+      # uploads ctest result as an artifact to be downloaded.
+      # runs even on test failure.
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -38,24 +50,31 @@ jobs:
           name: ctest-results
           path: build/Testing
 
+      # write test results into summary UI
       - name: Show test summary
         if: always()
         run: |
           echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
           ctest --test-dir build --output-on-failure >> $GITHUB_STEP_SUMMARY
 
+      # capture coverage, filter noise, generate html report
       - name: Generate coverage report
         run: |
           lcov --rc geninfo_unexecuted_blocks=1 --ignore-errors mismatch --capture --directory build --output-file coverage.info
           lcov --rc geninfo_unexecuted_blocks=1 --ignore-errors mismatch --remove coverage.info '/usr/*' '*/tests/*' '*/_deps/*' --output-file coverage.info
           genhtml coverage.info --output-directory coverage
 
+      # update html coverage dashboard
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage
 
+      # AI-generated markdown test summary
+      
+      # parse coverage.info to compute coverage %. 
+      # writes .md file containing percentage & progress bars
       - name: Generate Markdown Coverage Dashboard
         run: |
           python3 << 'EOF'
@@ -85,5 +104,6 @@ jobs:
               out.write("_Dashboard generated automatically._\n")
           EOF
 
+      # put .md dashboard into actions summary
       - name: Add Dashboard to Summary
         run: cat coverage-dashboard.md >> $GITHUB_STEP_SUMMARY
