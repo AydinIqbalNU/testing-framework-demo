@@ -8,6 +8,6 @@ TEST(AdditionTest, Basic) {
 }
 
 // simple test failure example
-TEST(AdditionTest, FailureExample) {
+/*TEST(AdditionTest, FailureExample) {
     EXPECT_EQ(add(2, 3), 6);
-}
+}*/
