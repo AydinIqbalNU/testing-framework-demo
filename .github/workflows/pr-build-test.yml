@@ -41,6 +41,15 @@ jobs:
       - name: Run tests
         run: ctest --test-dir build --output-on-failure
 
+      # report which tests failed and what lines 
+      - name: Extract failing tests
+        if: failure()   # only run if tests failed
+        run: |
+          echo "## ❌ Failed Tests" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          ctest --test-dir build --output-on-failure | grep -E "FAILED|Failure|error:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
       # uploads ctest result as an artifact to be downloaded.
       # runs even on test failure.
       - name: Upload test results
