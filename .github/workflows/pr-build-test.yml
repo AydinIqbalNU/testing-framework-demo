@@ -53,11 +53,7 @@ jobs:
           ctest --test-dir build --output-on-failure > full_test_output.txt || true
 
           # extract test names like "AdditionTest.FailureExample"
-          grep -Eo "
-
-          \[  FAILED  \]
-          
-           [A-Za-z0-9_\.]+" full_test_output.txt | awk '{print $3}' > failing_tests.txt || true
+          grep -Eo " \[  FAILED  \] [A-Za-z0-9_\.]+" full_test_output.txt | awk '{print $3}' > failing_tests.txt || true
 
           # show raw failure lines in summary
           echo '```' >> $GITHUB_STEP_SUMMARY
