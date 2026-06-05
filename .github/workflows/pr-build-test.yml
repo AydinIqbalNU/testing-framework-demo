@@ -41,14 +41,88 @@ jobs:
       - name: Run tests
         run: ctest --test-dir build --output-on-failure
 
-      # report which tests failed and what lines 
-      - name: Extract failing tests
-        if: failure()   # only run if tests failed
+      #Extract failing test names
+      - name: Extract failing test names
+        if: failure()
         run: |
           echo "## ❌ Failed Tests" >> $GITHUB_STEP_SUMMARY
+          ctest --test-dir build --output-on-failure > full_test_output.txt
+
+          # Extract test names like "AdditionTest.FailureExample"
+          grep -Eo "
+
+\[  FAILED  \]
+
+ [A-Za-z0-9_\.]+" full_test_output.txt \
+            | awk '{print $3}' > failing_tests.txt
+
+          # Also show raw failure lines in summary
           echo '```' >> $GITHUB_STEP_SUMMARY
-          ctest --test-dir build --output-on-failure | grep -E "FAILED|Failure|error:" >> $GITHUB_STEP_SUMMARY
+          grep -E "FAILED|Failure|error:" full_test_output.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
+
+      # Per-test coverage for failing tests
+      - name: Capture per-test coverage
+        if: failure()
+        run: |
+          mkdir per_test_coverage
+
+          while read testname; do
+            echo "Running failing test: $testname"
+
+            # Reset coverage counters
+            lcov --directory build --zerocounters
+
+            # Run only this test
+            ctest --test-dir build -R "$testname" --output-on-failure
+
+            # Capture coverage for this test
+            lcov --capture --directory build --output-file "per_test_coverage/$testname.info"
+
+          done < failing_tests.txt
+
+      # Add executed harp.cpp lines to summary
+      - name: Add executed lines to failure report
+        if: failure()
+        run: |
+          python3 << 'EOF'
+          import os, re
+
+          print("## 🔍 Executed Source Lines for Failing Tests\n")
+
+          # Load failing test names
+          with open("failing_tests.txt") as f:
+              tests = [t.strip() for t in f]
+
+          for test in tests:
+              print(f"### {test}")
+              info_file = f"per_test_coverage/{test}.info"
+
+              if not os.path.exists(info_file):
+                  print("  (No coverage data found)\n")
+                  continue
+
+              executed = []
+              current_file = None
+
+              with open(info_file) as f:
+                  for line in f:
+                      if line.startswith("SF:"):
+                          current_file = line.split("SF:")[1].strip()
+                      if line.startswith("DA:"):
+                          lineno, hits = line.split("DA:")[1].split(",")
+                          if int(hits) > 0 and "harp.cpp" in current_file:
+                              executed.append(f"{current_file}:{lineno}")
+
+              if executed:
+                  print("  Executed lines in harp.cpp:")
+                  for e in executed:
+                      print(f"  - {e}")
+              else:
+                  print("  No harp.cpp lines executed.")
+
+              print()
+          EOF >> $GITHUB_STEP_SUMMARY
 
       # uploads ctest result as an artifact to be downloaded.
       # runs even on test failure.
@@ -81,9 +155,6 @@ jobs:
           path: coverage
 
       # AI-generated markdown test summary
-      
-      # parse coverage.info to compute coverage %. 
-      # writes .md file containing percentage & progress bars
       - name: Generate Markdown Coverage Dashboard
         run: |
           python3 << 'EOF'
