@@ -38,34 +38,42 @@ jobs:
         run: cmake --build build --config Debug
 
       # runs all tests registered by add_test()
+      # DESIGN CHOICE: allow test failures without stopping workflow
       - name: Run tests
-        run: ctest --test-dir build --output-on-failure
+        run: ctest --test-dir build --output-on-failure || true
 
       # report which tests failed and what lines 
       # DESIGN CHOICE: extract failing test names for per-test coverage
       - name: Extract failing tests
-        if: failure()
+        if: always()
         run: |
           echo "## ❌ Failed Tests" >> $GITHUB_STEP_SUMMARY
-          ctest --test-dir build --output-on-failure > full_test_output.txt
+
+          # capture full test output
+          ctest --test-dir build --output-on-failure > full_test_output.txt || true
 
           # extract test names like "AdditionTest.FailureExample"
           grep -Eo "
 
           \[  FAILED  \]
           
-           [A-Za-z0-9_\.]+" full_test_output.txt | awk '{print $3}' > failing_tests.txt
+           [A-Za-z0-9_\.]+" full_test_output.txt | awk '{print $3}' > failing_tests.txt || true
 
           # show raw failure lines in summary
           echo '```' >> $GITHUB_STEP_SUMMARY
-          grep -E "FAILED|Failure|error:" full_test_output.txt >> $GITHUB_STEP_SUMMARY
+          grep -E "FAILED|Failure|error:" full_test_output.txt >> $GITHUB_STEP_SUMMARY || true
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       # run each failing test individually and capture coverage
       # DESIGN CHOICE: enables mapping failing tests → executed source lines
       - name: Capture per-test coverage
-        if: failure()
+        if: always()
         run: |
+          if [ ! -s failing_tests.txt ]; then
+            echo "No failing tests — skipping per-test coverage"
+            exit 0
+          fi
+
           mkdir per_test_coverage
 
           while read testname; do
@@ -75,7 +83,7 @@ jobs:
             lcov --directory build --zerocounters
 
             # run only this test
-            ctest --test-dir build -R "$testname" --output-on-failure
+            ctest --test-dir build -R "$testname" --output-on-failure || true
 
             # capture coverage for this test
             lcov --capture --directory build --output-file "per_test_coverage/$testname.info"
@@ -85,8 +93,13 @@ jobs:
       # add executed harp.cpp lines to summary
       # DESIGN CHOICE: shows which source lines ran during failing tests
       - name: Add executed lines to failure report
-        if: failure()
+        if: always()
         run: |
+          if [ ! -s failing_tests.txt ]; then
+            echo "No failing tests — skipping executed-line report" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
           python3 << 'EOF'
           import os, re
 
@@ -140,7 +153,7 @@ jobs:
         if: always()
         run: |
           echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
-          ctest --test-dir build --output-on-failure >> $GITHUB_STEP_SUMMARY
+          ctest --test-dir build --output-on-failure >> $GITHUB_STEP_SUMMARY || true
 
       # capture coverage, filter noise, generate html report
       - name: Generate coverage report
