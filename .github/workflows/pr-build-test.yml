@@ -68,7 +68,6 @@ jobs:
 
       # capture coverage, filter noise, generate html report
       - name: Generate coverage report
-        if: always()
         run: |
           lcov --rc geninfo_unexecuted_blocks=1 --ignore-errors mismatch --capture --directory build --output-file coverage.info
           lcov --rc geninfo_unexecuted_blocks=1 --ignore-errors mismatch --remove coverage.info '/usr/*' '*/tests/*' '*/_deps/*' --output-file coverage.info
@@ -76,18 +75,16 @@ jobs:
 
       # update html coverage dashboard
       - name: Upload coverage report
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage
 
       # AI-generated markdown test summary
-      
+
       # parse coverage.info to compute coverage %. 
       # writes .md file containing percentage & progress bars
       - name: Generate Markdown Coverage Dashboard
-        if: always()
         run: |
           python3 << 'EOF'
           import re
@@ -118,5 +115,4 @@ jobs:
 
       # put .md dashboard into actions summary
       - name: Add Dashboard to Summary
-        if: always()
         run: cat coverage-dashboard.md >> $GITHUB_STEP_SUMMARY
