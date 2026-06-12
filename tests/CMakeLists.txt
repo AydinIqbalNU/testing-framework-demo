@@ -21,7 +21,6 @@ add_executable(harp_tests
 target_link_libraries(harp_tests
     gtest_main
     harp
-    more_harp
 )
 
 # make ctests aware of our tests
