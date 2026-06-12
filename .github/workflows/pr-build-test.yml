@@ -68,6 +68,7 @@ jobs:
 
       # capture coverage, filter noise, generate html report
       - name: Generate coverage report
+        if: always()
         run: |
           lcov --rc geninfo_unexecuted_blocks=1 --ignore-errors mismatch --capture --directory build --output-file coverage.info
           lcov --rc geninfo_unexecuted_blocks=1 --ignore-errors mismatch --remove coverage.info '/usr/*' '*/tests/*' '*/_deps/*' --output-file coverage.info
@@ -75,6 +76,7 @@ jobs:
 
       # update html coverage dashboard
       - name: Upload coverage report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
