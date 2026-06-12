@@ -87,6 +87,7 @@ jobs:
       # parse coverage.info to compute coverage %. 
       # writes .md file containing percentage & progress bars
       - name: Generate Markdown Coverage Dashboard
+        if: always()
         run: |
           python3 << 'EOF'
           import re
