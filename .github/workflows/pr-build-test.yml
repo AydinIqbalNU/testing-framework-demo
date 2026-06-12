@@ -118,4 +118,5 @@ jobs:
 
       # put .md dashboard into actions summary
       - name: Add Dashboard to Summary
+        if: always()
         run: cat coverage-dashboard.md >> $GITHUB_STEP_SUMMARY
