@@ -1,21 +1,19 @@
 #include <gtest/gtest.h>
-#include "media/pianoroll/AudioDisplayComponent.h"
+#include "../src/media/pianoroll/AudioDisplayComponent.h"
 
-// example test of the supported extensions list in main/src/media/pianoroll/AudioDisplayComponent.cpp
 TEST(AudioDisplayComponentTest, SupportedExtensionsAreCorrect)
 {
-    AudioDisplayComponent comp;
-    auto exts = comp.getSupportedExtensions();
+    StringArray exts = AudioDisplayComponent::getSupportedExtensions();
 
-    // Expected list
+    // Expected extensions
     StringArray expected {
         ".wav", ".bwf", ".aiff", ".aif", ".flac", ".ogg", ".mp3"
     };
 
-    // Same number of items
+    // Same number of extensions
     EXPECT_EQ(exts.size(), expected.size());
 
-    // Check each expected extension is present
+    // Check that each expected extension is present
     for (auto& ext : expected)
         EXPECT_TRUE(exts.contains(ext));
 }
