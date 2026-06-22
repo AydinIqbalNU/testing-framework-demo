@@ -1,13 +1,21 @@
 #include <gtest/gtest.h>
+#include "media/pianoroll/AudioDisplayComponent.h"
 
-int add(int a, int b); // too lazy to make harp.h
-int subtract(int a, int b);
+// example test of the supported extensions list in main/src/media/pianoroll/AudioDisplayComponent.cpp
+TEST(AudioDisplayComponentTest, SupportedExtensionsAreCorrect)
+{
+    AudioDisplayComponent comp;
+    auto exts = comp.getSupportedExtensions();
 
-// simple test example
-TEST(AdditionTest, Basic) {
-    EXPECT_EQ(add(2, 3), 5);
+    // Expected list
+    StringArray expected {
+        ".wav", ".bwf", ".aiff", ".aif", ".flac", ".ogg", ".mp3"
+    };
+
+    // Same number of items
+    EXPECT_EQ(exts.size(), expected.size());
+
+    // Check each expected extension is present
+    for (auto& ext : expected)
+        EXPECT_TRUE(exts.contains(ext));
 }
-
-/*TEST(SubtractionTest, Basic) {
-    EXPECT_EQ(subtract(3,2), 1);
-}*/
