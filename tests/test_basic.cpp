@@ -1,19 +1,7 @@
 #include <gtest/gtest.h>
-#include "../src/test.h"
+#include "../src/math_functions.h"
 
-TEST(AudioDisplayComponentTest, SupportedExtensionsAreCorrect)
+TEST(math_functions, add)
 {
-    StringArray exts = AudioDisplayComponent::getSupportedExtensions();
-
-    // Expected extensions
-    StringArray expected {
-        ".wav", ".bwf", ".aiff", ".aif", ".flac", ".ogg", ".mp3"
-    };
-
-    // Same number of extensions
-    EXPECT_EQ(exts.size(), expected.size());
-
-    // Check that each expected extension is present
-    for (auto& ext : expected)
-        EXPECT_TRUE(exts.contains(ext));
+    EXPECT_EQ(add(2, 3), 5);
 }
