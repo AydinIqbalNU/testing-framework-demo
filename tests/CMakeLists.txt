@@ -9,10 +9,12 @@ FetchContent_Declare(
 # allow use of google test suite
 FetchContent_MakeAvailable(googletest)
 
-# make a target called harp_tests and an executable comprised of 2 cpp files
+# get all cpp files in tests directory
+file(GLOB_RECURSE TEST_SOURCES "*.cpp")
+
+# make a target called harp_tests and an executable comprised of all cpp files in tests directory
 add_executable(harp_tests
-    test_main.cpp
-    test_basic.cpp
+    ${TEST_SOURCES}
 )
 
 # linking harp_tests to gtest_main harp makes sure  
