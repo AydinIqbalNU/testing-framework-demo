@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/media/pianoroll/AudioDisplayComponent.h"
+#include "../src/test.h"
 
 TEST(AudioDisplayComponentTest, SupportedExtensionsAreCorrect)
 {
